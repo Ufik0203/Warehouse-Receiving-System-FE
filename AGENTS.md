@@ -12,7 +12,7 @@ Jangan menjalankan perintah Git apa pun, termasuk read-only, staging, commit, br
 
 ## Aturan umum
 
-- Kerjakan hanya task yang diminta; Task 3 belum dimulai sampai diminta eksplisit. Jangan menambah role admin, registrasi publik, fitur AI atau scope lain.
+- Kerjakan hanya task yang diminta; Backend Task 3-5 tersedia sesuai kontrak; frontend Task 6 diizinkan pengguna. Jangan memulai deployment Task 7 tanpa instruksi eksplisit. Jangan menambah role admin, registrasi publik, fitur AI atau scope lain.
 - Gunakan TypeScript strict, validasi untrusted input, hindari explicit any/type suppression; jangan mengekspos hash/password/session internals atau secret ke response/log.
 - npm 11.6.2, Node 24 dan lockfile lokal adalah baseline; gunakan dependency/config repository ini, bukan parent/saudara. Tidak menggunakan flags workspace untuk command aktif.
 - API backend adalah sumber utama; replika frontend harus identik sesuai docs/api-sync.md. Jangan menyinkronkan lewat Git/GitHub atau memilih kode error/behavior baru tanpa dasar.
@@ -26,4 +26,4 @@ Jangan menjalankan perintah Git apa pun, termasuk read-only, staging, commit, br
 - Pertahankan key+payload receipt pending per actor/receiving di sessionStorage melewati reload/reauth; tidak menyimpan password, SID atau CSRF token. Jangan optimistically meningkatkan inventory atau membuat key baru otomatis pada hasil yang belum pasti.
 - Bedakan sukses commit dari kegagalan refetch. Pada kehilangan auth, hentikan protected queries dan hapus cache user sebelumnya. Backend authorization tetap wajib; UI visibility bukan enforcement.
 - Pakai HeroUI v3 secara konsisten, Tailwind v4 melalui Vite, CSS Tailwind lalu HeroUI. Pertahankan router dan Query provider. strict true/skipLibCheck false; pengecualian exactOptionalPropertyTypes false Task 2A dicatat, jangan melonggarkan opsi lain untuk menutupi masalah.
-- Jangan menambah secret backend pada VITE_* atau mengirim credentials/token ke API tak dipercaya. Component/browser suites bisnis masih direncanakan; jangan klaim selesai dari screenshot demo.
+- Jangan menambah secret backend pada VITE_* atau mengirim credentials/token ke API tak dipercaya. Component/browser suites Task 6 memiliki bukti aktual di docs/testing.md; jangan mengklaim browser/device/deployment di luar cakupan bukti tersebut telah diuji.

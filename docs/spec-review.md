@@ -65,3 +65,8 @@ R-14 kini memiliki bukti aktual untuk dependency fondasi, adapter PostgreSQL, Re
 ## Status pada repository mandiri
 
 Dokumen ini mempertahankan review sumber, bukan implementasi baru. R-10/R-11/R-13 masih perlu keputusan sebelum endpoint/validator bisnis terkait. Semua file aktif dirujuk relatif terhadap repository ini; catatan path/workflow proyek gabungan adalah konteks historis. Task 3 belum dimulai dan semua operasi Git/GitHub hanya manual pengguna. Lihat [workflow aktif](ai-workflow.md).
+
+
+## Status frontend Task 6
+
+Status terbuka/belum-tersedia dalam review Task 1 adalah histori. Replika api-contract.md/openapi.yaml/manifest yang disalin pemilik kini identik backend Task 5 dan mencakup keputusan R-10 resource code, R-11 code point, R-13 snapshot server. Frontend menerapkan kontrak itu, tidak mengubah aturan SQL/authorization atau memutuskan bisnis baru. Autentikasi/UI business/pending receipt/cache isolation diimplementasikan pada Task 6; bukti aktual dan NOT_RUN tersedia pada testing.md. Tidak mengubah sumber PROJECT_SPEC.md atau backend.

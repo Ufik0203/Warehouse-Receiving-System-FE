@@ -1,14 +1,14 @@
 {
   "date": "2026-10-29",
-  "scope": "Static documentation only; application/runtime tests NOT_RUN; Task 3 NOT_STARTED",
+  "scope": "Static documentation only; application/runtime tests not executed by this command; see testing.md for Task 6",
   "status": "PASS",
   "requirementIds": 87,
-  "activeMarkdownFiles": 13,
-  "localLinks": 54,
+  "activeMarkdownFiles": 14,
+  "localLinks": 58,
   "archivedFilesVerified": 39,
   "contractHashes": {
-    "api-contract.md": "bcbd55cf7e9a3db676b59b4ac5be6493f310ca30b2e333889838a06c55edc267",
-    "openapi.yaml": "db04907ba4374c1e03f4cdd9813f25120ca33f1c007889a2bbfaff69877f2fc5"
+    "api-contract.md": "2803c7fef094758dbbab8e045d80b4f55d1eafd30d32c5166a8040cf34cb4f78",
+    "openapi.yaml": "ebcb0e1176dfe0fe6814b9cf9c2a44d16c3ee92bff3ea3567b2f1001ce3fb9b4"
   },
   "backendArtifactCompared": true,
   "apiOperations": 20,
