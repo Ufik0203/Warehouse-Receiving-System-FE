@@ -1,5 +1,6 @@
 import { test as base,expect } from '@playwright/test';
-import { spawn } from 'node:child_process';
+import { spawn,execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 import { readFileSync } from 'node:fs';
 import { dirname,isAbsolute } from 'node:path';
 import { randomUUID } from 'node:crypto';
@@ -8,6 +9,19 @@ import { randomUUID } from 'node:crypto';
 // A fresh Redis namespace per case preserves the real production rate-limit policy.
 export const test=base.extend<{ isolatedBackend:void }>({
  isolatedBackend:[async({playwright},use)=>{
+  if(process.env['E2E_RUNTIME']==='docker'){
+   const file=process.env['E2E_COMPOSE_FILE'];const envFile=process.env['E2E_COMPOSE_ENV'];const project=process.env['E2E_COMPOSE_PROJECT'];
+   if(!file||!envFile||!project||!isAbsolute(file)||!isAbsolute(envFile)||!/^wrs-task7-[a-z0-9]+$/.test(project))throw new Error('Docker suite requires absolute Compose/env paths and an isolated wrs-task7 project.');
+   const database=readFileSync(envFile,'utf8').match(/^POSTGRES_DB=(.*)$/m)?.[1]?.trim();
+   if(!database?.endsWith('_test'))throw new Error('Docker E2E requires a test database.');
+   await promisify(execFile)('docker',['compose','-f',file,'--env-file',envFile,'--project-name',project,'up','-d','--no-deps','--force-recreate','--wait','api'],{windowsHide:true,timeout:90000,env:{...process.env,REDIS_NAMESPACE:`wrs:test:task7:${randomUUID()}`}}).catch(()=>{throw new Error('Isolated Docker API restart failed; inspect the task deployment safely.');});
+   const probe=await playwright.request.newContext();
+   try{
+    await expect.poll(async()=>{try{return(await probe.get(`${process.env['E2E_BASE_URL']}/health/ready`)).status();}catch{return 0;}},{timeout:30000}).toBe(200);
+    await use();
+   }finally{await probe.dispose();}
+   return;
+  }
   const entry=process.env['E2E_BACKEND_ENTRY'];const file=process.env['E2E_BACKEND_ENV_FILE'];
   if(!entry||!file)throw new Error('Full browser suite requires explicit E2E_BACKEND_ENTRY and E2E_BACKEND_ENV_FILE for an isolated external backend.');
   if(!isAbsolute(entry)||!isAbsolute(file))throw new Error('External backend paths must be absolute.');

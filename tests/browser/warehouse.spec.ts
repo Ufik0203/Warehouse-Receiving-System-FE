@@ -45,7 +45,7 @@ test('supervisor manages products/users; operator routes and mobile layout respe
  await page.getByRole('button',{name:'Hapus pengguna',exact:true}).click();await page.getByRole('button',{name:'Konfirmasi hapus',exact:true}).click();await expect(page.getByText('Pengguna berhasil dihapus.')).toBeVisible();
  await page.getByRole('button',{name:'Keluar',exact:true}).click();await login(page,operator);await page.reload();await expect(page.getByRole('navigation')).toBeVisible();
  await expect(page.getByRole('link',{name:'Pengguna',exact:true})).toHaveCount(0);await page.goto('/products');await expect(page.getByRole('heading',{name:'Produk',exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'Buat produk',exact:true})).toHaveCount(0);
- await page.screenshot({path:`docs/evidence/task6-${info.project.name}.png`,fullPage:true});
+ await page.screenshot({path:`docs/evidence/${process.env['E2E_RUNTIME']==='docker'?'task7':'task6'}-${info.project.name}.png`,fullPage:true});
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
  await page.goto('/users');await expect(page.getByRole('heading',{name:'Akses tidak diizinkan'})).toBeVisible();await page.goto('/does-not-exist');await expect(page.getByRole('heading',{name:'Halaman tidak ditemukan'})).toBeVisible();
 });
