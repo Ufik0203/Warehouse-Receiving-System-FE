@@ -171,6 +171,7 @@ Get-Content -LiteralPath $e2eFile | ForEach-Object {
     if ($_ -match '^([^#=]+)=(.*)$') { $e2eValues[$matches[1]] = $matches[2] }
 }
 Remove-Item Env:E2E_RUNTIME -ErrorAction SilentlyContinue
+$env:E2E_EVIDENCE_PREFIX = 'review-e2e'
 $env:E2E_BASE_URL = 'http://localhost:5173'
 $env:E2E_BACKEND_PORT = '3306'
 $env:E2E_BACKEND_ENTRY = (Resolve-Path (Join-Path $e2eBackend 'dist/server.js')).Path
@@ -275,3 +276,19 @@ Build/component/browser input tidak memerlukan file docs di luar tujuh dokumen s
 ## Pemeriksaan README pada 2026-10-29
 
 PASS pemeriksaan statis nama npm scripts terhadap package.json, keberadaan template/config, tepat tujuh tautan dokumen submission yang tersedia, serta syntax seluruh blok PowerShell. Audit source/config tidak menemukan input build/test pada docs yang diabaikan; E2E menulis report/screenshot baru sebagai output. Secret environment lokal tidak ditemukan dalam isi README. Suite aplikasi dan startup/deployment dari checkout bersih tidak diulang pada pekerjaan dokumentasi ini: **NOT_RUN**. Hanya README backend/frontend diubah; tidak membuat server, mengubah konfigurasi, menjalankan Git, atau mengubah database/volume.
+
+## Penyempurnaan setelah Task 7: edit produk
+
+SUPERVISOR dapat memperbaiki SKU/nama melalui Edit pada daftar produk dan PATCH /api/v1/products/:id. Produk terpakai tetap boleh diedit; SKU unik, normalisasi/batas existing berlaku. Inventory/detail/history menampilkan label produk terkini, sedangkan receipt/stock/replay tidak berubah. Tidak menambah delete/arsip/status aktif. Kontrak terbaru pada docs/openapi.yaml dan hasil verifikasi2026-10-30 pada docs/testing.md.
+
+## Riwayat Edit Produk
+
+SUPERVISOR dapat membuka tombol **Riwayat Edit** pada daftar produk menuju `/products/:id/history`. Halaman khusus ini menampilkan identitas produk, waktu server, nama pelaku saat perubahan, field dan nilai sebelum/sesudah, serta loading/empty/error/pagination. GET `/api/v1/products/:id/history` supervisor-only memakai page/limit(default20,max100); bukan `/inventory/transactions`.
+
+Migrasi forward `202610300002_product_edit_history` menambah tabel permanen. Product update dan log ditulis dalam satu transaksi dengan row lock; no-op/failed edit tidak menghasilkan log. Actor soft-delete/rename tidak menghilangkan nama snapshot. Log hanya tersedia mulai fitur ini aktif; perubahan masa lalu tidak direkayasa. Tidak ada edit/delete log atau delete/archive produk. Receipt/stock/idempotency tidak berubah.
+
+Development npm run dev akan deploy migrasi pending sekali sebelum watcher; jangan reset database. Untuk runtime manual dari backend gunakan env target yang telah diperiksa dan npm run db:migrate:deploy sebelum npm start. Docker menggunakan job migrate pada image baru, lalu readiness kini memeriksa tabel log. Production Docker rebuild/deployment untuk fitur tambahan ini NOT_RUN; lihat docs/testing.md untuk verifikasi tes nyata.
+
+## Pagination form receiving
+
+Form dokumen baru menyediakan dua pager terpisah: **Katalog produk pilihan** untuk halaman produk API dan **Item penerimaan** untuk baris formulir. Masing-masing menampilkan5 data per halaman. Nomor item mengikuti seluruh formulir; tambah item membuka dan memfokuskan item baru, sedangkan hapus menyesuaikan halaman kosong. Pilihan/quantity seluruh halaman tetap tersimpan, produk duplikat dicegah lintas halaman, dan Simpan receiving memvalidasi serta mengirim seluruh1–50 item. Kesalahan pada item tersembunyi membuka halaman item invalid pertama. Kontrak API tetap sama; bukti pemeriksaan pada docs/testing.md.

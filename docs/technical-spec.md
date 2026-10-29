@@ -174,3 +174,51 @@ Dockerfiles/lockfile pada masing-masing root repository; Compose backend deploy/
 ### Startup development satu command
 
 Lihat development.md: npm run dev backend memvalidasi env/.env/override, memeriksa port3000 dan Docker, Compose project wrs-development-laptop healthy, Prisma generate, query target lalu migrate deploy/seed sekali sebelum watcher. Vite development localhost5175 strictPort, proxy127.0.0.1:3000 mempertahankan Origin. APP_ORIGIN5175/local cookie non-Secure. Mode test eksplisit mempertahankan alternate fixture proxy. Kontrak API/security tidak berubah. Root workspace registration lama dihapus minimal; dependency dan kedua lockfile aplikasi tetap.
+
+
+## Penyempurnaan setelah Task 7: edit produk (2026-10-30)
+
+Keputusan sebelum verifikasi: PATCH hanya sku/name oleh SUPERVISOR. Schema partial strict dari create, minimal satu; repository single SQL UPDATE dengan whitelist sku/name, service memetakan P2025 ke PRODUCT_NOT_FOUND404 dan P2002 ke SKU_ALREADY_EXISTS409. Tidak pre-check SKU yang rentan race; unique constraint existing tetap otoritatif. Single update atomik termasuk name jika SKU conflict. Mapper ProductDto existing dipertahankan; tidak mengubah schema, migration atau dependency.
+
+Inventory repository include product dan receiving detail include product menampilkan label produk TERKINI, termasuk ledger lama. Receipt mapper menyimpan/mengembalikan receivingItemId/productId/quantity, tidak label; payload hash/replay tidak berubah. Tidak membuat snapshot label, produk pengganti, balance baru atau mengubah hubungan/quantity/receipt.
+
+Frontend supervisor Edit -> prefilled SKU/name -> Simpan/Batal memakai DataForm/HeroUIv3 dan useAction(useMutation). Pending menonaktifkan edit/save/cancel, ref guard mencegah double-submit; error tetap pada form. Setelah commit invalidate seluruh prefix actor untuk products/inventory/receivings/transactions, termasuk detail/inactive queries; tidak optimistically mengubah stok. Refetch failure tetap success dengan refresh warning existing. Operator tidak melihat aksi dan server tetap menolak.
+
+Audit awal menemukan OpenAPI frontend tertinggal (metadata dan beberapa ketentuan R-10/R-11/Task5), sementara backend authority lebih lengkap. Sinkronisasi kali ini memakai backend sebagai sumber, memperbarui kedua artifact kontrak dan manifest identik; bukan mengambil behavior dari salinan frontend lama.
+
+
+## Tambahan riwayat edit produk setelah Task7 (2026-10-30)
+
+Menggantikan keputusan single UPDATE pada penyempurnaan edit sebelumnya: service kini READ COMMITTED transaction, repository SELECT products.id FOR UPDATE, baca label aktual, deteksi normalized no-op, baca actor name dari User berdasarkan req.user.id, UPDATE sku/name, INSERT ProductEditHistory, COMMIT. Semua operasi memakai transaction client yang sama. Unique SKU tetap database arbiter; log failure membatalkan product dan sebaliknya. In-flight authorization mengikuti BR-U12 existing; request baru tetap reload role/status/authVersion.
+
+Model multi-file product-edit-history.prisma/table product_edit_history: UUIDid/product_id/actor_id, snapshot actor_name varchar120, changed_at timestamptz6 default clock_timestamp(), before/after_sku varchar40 dan before/after_name varchar120. Clock timestamp saat insert dipilih agar request yang menunggu lock tidak memakai waktu awal transaksi untuk ordering. FK produk/actor RESTRICT update/delete; soft delete User tidak memutus FK dan actorName tidak di-join ulang. Index(product_id,changed_atDESC,idDESC), index(actor_id), CHECK effective change, SKU format dan panjang nama nonempty. Migrasi forward202610300002_product_edit_history menambah tabel saja, tidak mengubah applied initial migration/data lama. Log historis sebelum fitur tidak direkayasa/backfill. Tidak ada mutation API untuk log; bukan fitur stock/receiving.
+
+GET /api/v1/products/:id/history supervisor-only, strict page/limit existing, paginated DTO, REPEATABLE READ untuk exists/list/count satu snapshot. Route UI /products/:id/history dalam Protected supervisor, tombol Riwayat Edit pada daftar, identitas produk/current label, kembali, event table before/after dan actor snapshot/time, loading/empty/error/retry/pagination. Resource cache productHistory terpisah dari transactions; edit invalidate productHistory beserta products/inventory/receivings/transactions. Tidak mencampur audit dengan ledger. Tidak menambah dependency.
+
+Readiness LIMIT0 juga memeriksa product_edit_history; image/API versi baru tidak menyatakan ready bila migrasi tabel log belum tersedia. Tidak mengubah health response contract.
+
+
+## Penyesuaian UI setelah Task7: pilihan produk receiving tanpa pencarian (2026-10-30)
+
+Hanya CreateReceiving: hapus label/input Cari produk untuk pilihan, state search, handler reset page dan filter q milik input tersebut. Tidak ada debounce terpisah. Query pilihan kini {page,limit:100}; Pagination existing tetap menjangkau seluruh halaman produk. known options map existing mempertahankan pilihan yang sudah dipilih saat pindah halaman. Tidak memuat seluruh katalog sekaligus atau membatasi ke halaman pertama. Pilihan produk, quantity/ref, max50 item, unique-product validation dan quantity integer1..1000000 tidak diubah. Pencarian halaman produk/inventory dan dukungan q pada API tetap ada.
+
+Tes browser receiving existing memakai helper paginated dropdown, bukan mengisi input pencarian yang sudah dihapus. Helper menargetkan tombol Select dan menunggu popup selesai ditutup agar label dialog/listbox animasi tidak menjadi selector ganda. JSdom test setup menyediakan CSS.escape test-only untuk membuka HeroUI/React Aria Select asli; bukan perubahan runtime aplikasi/dependency.
+
+
+## Koreksi pagination katalog pada CreateReceiving (2026-10-30)
+
+Menggantikan page size100 khusus selector receiving menjadi5; tidak mengubah default API20/max100, shared Pagination atau halaman lain. Pager existing adalah KATALOG PRODUK dari GET /products, bukan rows receiving. API total=COUNT productWhere, skip=(page-1)*limit; frontend memakai response.pagination.total, bukan data.length/rows.length. Query key tetap ['actor',actorId,authEpoch,'products','list',{page,limit:5}], sehingga beda halaman/limit tidak bertabrakan dengan cache halaman produk.
+
+Pager lokal katalog menghitung max(1,ceil(total/5)); Previous disabled page<=1, Next disabled page>=totalPages, keduanya disabled ketika fetching/mutation. Handler prev/next dibatasi1..totalPages dan benar-benar mengganti query page/limit5. UI menampilkan Katalog produk pilihan + Halaman X dari Y + total produk. Pagination baris receiving ditentukan terpisah pada penyempurnaan berikutnya. Rows tetap maksimal50 dan validator quantity/reference/duplicate tidak diubah.
+
+Tidak lagi menggabungkan seluruh opsi halaman lama ke dropdown. Opsi=halaman katalog saat ini, ditambah hanya selected product milik baris sendiri bila berada di halaman lain; hint menjelaskannya. Label tersimpan dipakai mempertahankan pilihan/quantity; selected product baris lain tidak ditawarkan untuk mencegah pemilihan ganda. Unique-product Zod guard tetap defense-in-depth. Total katalog tidak berkurang karena row form dipilih/ditambah.
+
+## Pagination baris item receiving setelah Task 7 (2026-10-30)
+
+CreateReceiving mempunyai dua pager independen: **Katalog produk pilihan** membaca total produk API dengan page/limit5 existing; **Item penerimaan** hanya membatasi tampilan array lokal menjadi5 baris. Tidak menambah parameter/request API untuk pagination item. Label `Item penerimaan — Halaman X dari Y · N item` memakai seluruh rows.length, Y=max(1,ceil(N/5)); nomor field/heading tetap indeks global, bukan indeks slice. Batas1–50 item tetap sesuai kontrak.
+
+State rows menyimpan UUID key, productId dan expectedQuantity untuk seluruh halaman; React key, update dan delete menggunakan UUID stabil. visibleRows hanya slice untuk render; unmount field tidak menghapus state. Tambah item membuka halaman item baru dan memfokuskan trigger pilihan produknya setelah render. Hapus mempertahankan minimal1 item dan clamp halaman terakhir yang kosong. Navigasi item tidak mengganti halaman katalog atau mengambil data produk tambahan. Tombol pager dibedakan menjadi Item sebelumnya/Item berikutnya dan disabled pada batas/pending mutation.
+
+Opsi produk memeriksa duplikat terhadap SELURUH rows, termasuk halaman tersembunyi. Pilihan sendiri dari halaman katalog lain tetap memakai label tersimpan. Submit memvalidasi dan mengirim SELURUH rows, bukan visibleRows. Jika ada kesalahan item, urutkan menurut indeks global, buka halaman item invalid pertama, tampilkan nomor item/pesan dan fokuskan produk atau quantity yang salah; tidak mengirim mutation. Guard duplicate Zod tetap berlaku, dengan error pada field item kedua yang berulang. Ref/reference validation, quantity integer1..1000000, max50, kontrak dan perilaku create/receipt tidak berubah.
+
+Mengubah field item membersihkan error field/pesan submit lama; submit berikutnya tetap memvalidasi seluruh data. Grid form menggunakan track minmax(0,1fr), min-width0 dan wrapping label Select secara lokal supaya SKU/nama Unicode panjang tidak memperlebar halaman mobile. Shared Fields, CSS global, pager katalog dan halaman lain tidak diubah.

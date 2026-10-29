@@ -1,4 +1,80 @@
-import type { ReactNode } from 'react';
-import { Button } from '@heroui/react';
-export function DataTable({headers,rows}:{headers:string[];rows:ReactNode[][]}) {return <div className="overflow-x-auto rounded-xl border border-border">{rows.length?<table className="w-full text-left text-sm"><thead className="bg-default"><tr>{headers.map(header=><th key={header} scope="col" className="whitespace-nowrap p-3 font-medium text-muted">{header}</th>)}</tr></thead><tbody>{rows.map((row,index)=><tr key={index} className="border-t border-border">{row.map((cell,i)=><td key={i} className="p-3 align-top">{cell}</td>)}</tr>)}</tbody></table>:<p className="p-5 text-muted">Belum ada data.</p>}</div>;}
-export function Pagination({page,total,limit=20,onPage}:{page:number;total:number;limit?:number;onPage:(v:number)=>void}) {return <div className="flex flex-wrap items-center justify-between gap-3 text-sm"><p>Halaman {page} · {total} data</p><div className="flex gap-2"><Button variant="secondary" isDisabled={page<=1} onPress={()=>onPage(page-1)}>Sebelumnya</Button><Button variant="secondary" isDisabled={page*limit>=total} onPress={()=>onPage(page+1)}>Berikutnya</Button></div></div>;}
+import type { ReactNode } from "react";
+import { Button } from "@heroui/react";
+
+export function DataTable({
+  headers,
+  rows,
+}: {
+  headers: string[];
+  rows: ReactNode[][];
+}) {
+  return (
+    <div className="overflow-x-auto rounded-xl border border-border">
+      {rows.length ? (
+        <table className="w-full text-left text-sm">
+          <thead className="bg-default">
+            <tr>
+              {headers.map((header) => (
+                <th
+                  key={header}
+                  scope="col"
+                  className="whitespace-nowrap p-3 font-medium text-muted"
+                >
+                  {header}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row, index) => (
+              <tr key={index} className="border-t border-border">
+                {row.map((cell, i) => (
+                  <td key={i} className="p-3 align-top">
+                    {cell}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : (
+        <p className="p-5 text-muted">Belum ada data.</p>
+      )}
+    </div>
+  );
+}
+export function Pagination({
+  page,
+  total,
+  limit = 20,
+  onPage,
+}: {
+  page: number;
+  total: number;
+  limit?: number;
+  onPage: (v: number) => void;
+}) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
+      <p>
+        Halaman {page} · {total} data
+      </p>
+      <div className="flex gap-2">
+        <Button
+          variant="secondary"
+          isDisabled={page <= 1}
+          onPress={() => onPage(page - 1)}
+        >
+          Sebelumnya
+        </Button>
+        <Button
+          variant="secondary"
+          isDisabled={page * limit >= total}
+          onPress={() => onPage(page + 1)}
+        >
+          Berikutnya
+        </Button>
+      </div>
+    </div>
+  );
+}

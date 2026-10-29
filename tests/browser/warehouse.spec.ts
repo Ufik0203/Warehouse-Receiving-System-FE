@@ -1,4 +1,5 @@
 import { test,expect } from './fixtures';
+import { chooseReceivingProduct } from './receiving-products';
 import type { APIRequestContext,Page } from '@playwright/test';
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
@@ -45,15 +46,15 @@ test('supervisor manages products/users; operator routes and mobile layout respe
  await page.getByRole('button',{name:'Hapus pengguna',exact:true}).click();await page.getByRole('button',{name:'Konfirmasi hapus',exact:true}).click();await expect(page.getByText('Pengguna berhasil dihapus.')).toBeVisible();
  await page.getByRole('button',{name:'Keluar',exact:true}).click();await login(page,operator);await page.reload();await expect(page.getByRole('navigation')).toBeVisible();
  await expect(page.getByRole('link',{name:'Pengguna',exact:true})).toHaveCount(0);await page.goto('/products');await expect(page.getByRole('heading',{name:'Produk',exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'Buat produk',exact:true})).toHaveCount(0);
- await page.screenshot({path:`docs/evidence/${process.env['E2E_RUNTIME']==='docker'?'task7':'task6'}-${info.project.name}.png`,fullPage:true});
+ await page.screenshot({path:`docs/evidence/${process.env['E2E_EVIDENCE_PREFIX']??(process.env['E2E_RUNTIME']==='docker'?'task7':'task6')}-${info.project.name}.png`,fullPage:true});
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
  await page.goto('/users');await expect(page.getByRole('heading',{name:'Akses tidak diizinkan'})).toBeVisible();await page.goto('/does-not-exist');await expect(page.getByRole('heading',{name:'Halaman tidak ditemukan'})).toBeVisible();
 });
 test('creates receiving through UI and receives 40 then 60, with inventory/history and duplicate-submit protection',async({page,request})=>{
  const root=await admin(request);const who=await account(root,'OPERATOR');const fixture=await createDocument(root,who.id);
  await page.goto('/login');await login(page,who);await page.getByRole('link',{name:'Buat receiving',exact:true}).click();
- await page.getByLabel('Referensi',{exact:true}).fill('Browser 100');await page.getByLabel('Cari produk untuk pilihan',{exact:true}).fill(fixture.product.sku);
- await select(page,'Produk 1',`${fixture.product.sku} · ${fixture.product.name}`);await page.getByLabel('Expected quantity 1',{exact:true}).fill('100');await page.getByRole('button',{name:'Simpan receiving',exact:true}).click();await page.getByRole('link',{name:'Buka receiving',exact:true}).click();
+ await page.getByLabel('Referensi',{exact:true}).fill('Browser 100');await expect(page.getByLabel('Cari produk untuk pilihan',{exact:true})).toHaveCount(0);
+ await chooseReceivingProduct(page,'Produk 1',`${fixture.product.sku} · ${fixture.product.name}`);await page.getByLabel('Expected quantity 1',{exact:true}).fill('100');await page.getByRole('button',{name:'Simpan receiving',exact:true}).click();await page.getByRole('link',{name:'Buka receiving',exact:true}).click();
  const id=page.url().split('/').at(-1)??'';await page.getByLabel(`Terima ${fixture.product.sku}`,{exact:true}).fill('101');await page.getByRole('button',{name:'Simpan penerimaan',exact:true}).click();await expect(page.getByText('Gunakan bilangan bulat 1 sampai remaining (maksimal 1.000.000).')).toBeVisible();
  let posts=0;page.on('request',req=>{if(req.method()==='POST'&&req.url().endsWith(`/receivings/${id}/receipts`))posts++;});
  await page.getByLabel(`Terima ${fixture.product.sku}`,{exact:true}).fill('40');await page.getByRole('button',{name:'Simpan penerimaan',exact:true}).dblclick();await expect(page.getByText('PARTIAL',{exact:true})).toBeVisible();expect(posts).toBe(1);

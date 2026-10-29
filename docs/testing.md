@@ -263,3 +263,246 @@ Percobaan awal frontend build dan backend Vitest gagal startup tool akibat spawn
 Bukti baru development-startup-browser.json, development-startup-security.json dan backend development-startup-unit.json; bukti development-verification/Task2?7 lama tetap disimpan. Negative Docker engine mati/dependency awal berhenti, full SQL integration/concurrency ulang, Firefox/WebKit/device fisik NOT_RUN. Test security/browser menggunakan database development hanya untuk login/session, tidak menjalankan destructive fixture atau full integration suite di sana.
 
 Final checks: IPv4/IPv6 backend socket entries share one API PID26748; Vite PID12160 binds ::1:5175 (localhost). No5173/5174 listeners. Final HTTP /200, /health/ready200, /api/v1/auth/me401. python docs/validation/check-docs.py both exit0 PASS87 IDs/20 ops/contracts/archive; frontend compared explicit backend artifact. Aggregate evidence development-startup-verification.json, watcher source restart verified without preparation repeat. Runtime Task7 remains healthy.
+
+
+## Penyempurnaan setelah Task 7: edit produk ? 2026-10-30
+
+Scope baru diizinkan pengguna: supervisor PATCH SKU/name saja. BR-P06 diperluas di PRD; tidak menambah delete/archive/active status, dependency, schema atau migration. Riwayat membaca label produk terkini melalui relasi product; receipt tetap DTO historis ID/quantity, tanpa snapshot label baru. Mapper DTO produk existing digunakan kembali.
+
+### Environment dan hasil aktual
+
+Project tes baru **wrs-product-edit-5fe0384e**, database **wrs_edit_5fe0384e_test**, PostgreSQL host127.0.0.1:55470, Redis host127.0.0.1:56420; namespace dasar **wrs:test:productedit:5fe0384e**. File privat backend env/.env.product-edit dibuat dari env/.env.example dengan random credentials; file development/deployment/tes lama tidak diganti. Browser fixture menjalankan built API3310 dengan namespace unik per kasus (prefix fixture wrs:test:task6:UUID) dan Vite localhost5176 --mode test. Tidak melonggarkan limiter produksi. Unit/integration dijalankan selesai sebelum browser final pada database sama, tidak bertumpuk dengan fixture lain.
+
+| Command / pemeriksaan | Exit | Aktual |
+| --- | --- | --- |
+| docker info; docker compose --env-file env/.env.product-edit up -d --wait postgres redis (backend) | 0 | Docker Engine29.8.0; project/volume baru, dependency healthy. |
+| BACKEND_ENV_FILE target tes + RUN_FOUNDATION_INTEGRATION=true, npm run verify:database; npm run db:seed | 0 | DB public schema kosong terbukti, migration pertama dan deploy ulang identik, seed berhasil. |
+| npm run lint; npm run typecheck; npm run build (masing-masing repository) | 0 | PASS strict types, generate Prisma7.10.1 offline dan production build. |
+| npm run test:unit -- --reporter=default --reporter=json --outputFile=docs/evidence/product-edit-unit.json (backend) | 0 | **19/19 PASS**,0 skip/fail. |
+| npm run test:integration -- --reporter=default --reporter=json --outputFile=docs/evidence/product-edit-integration.json (backend dengan env tes eksplisit) | 0 | **63/63 PASS**,0 skip/fail, PostgreSQL/Redis nyata; termasuk4 test edit baru dan seluruh auth/users/receiving/foundation. |
+| npm run test:component -- --reporter=default --reporter=json --outputFile=docs/evidence/product-edit-components.json (frontend) | 0 | **17/17 PASS**,0 skip/fail;4 test form edit baru. |
+| npm run dev -- --mode test --port 5176 (frontend, API_PROXY_TARGET=http://127.0.0.1:3310) | RUNNING selama suite | Vite fixture siap; dihentikan setelah suite. |
+| npm run test:browser (frontend dengan E2E environment di bawah) | 0 | **12/12 PASS**,0 skipped/flaky/retry,40.65s;2 browser edit baru desktop/mobile +10 regression existing. |
+| Python openapi_spec_validator0.7.2 terhadap backend dan frontend docs/openapi.yaml | 0 | Kedua schema valid. |
+| python docs/validation/check-docs.py (kedua repo; frontend --contract-source explicit backend docs) | 0 | 87ID existing,21 operasi, links/archive/source/manifest hashes dan byte-equal contract pair. |
+
+Perintah di atas adalah eksekusi aktual; blok berikut hanya bentuk rerun setelah menyediakan env tes sendiri. Dari backend: set BACKEND_ENV_FILE ke path absolut env khusus `_test`, RUN_FOUNDATION_INTEGRATION=true, lakukan Compose/verify:database (hanya schema kosong)/seed/build, kemudian unit/integration. Jangan menjalankan verify:database pada DB yang sudah berisi tabel atau men-deploy ke development untuk tes. Template env/.env.example disertakan; file .env.product-edit lokal bukan prasyarat checkout orang lain.
+
+Frontend runner memakai E2E_BACKEND_ENTRY path absolut built dist/server.js, E2E_BACKEND_ENV_FILE path absolut file tes, E2E_BACKEND_PORT=3310, E2E_BASE_URL=http://localhost:5176, E2E_EVIDENCE_PREFIX=product-edit, serta E2E_SEED_EMAIL/PASSWORD dari file tes yang dibaca privat ke process env; E2E_RUNTIME unset (external). Fixture mengelola start/readiness/stop API per kasus. E2E_EVIDENCE_PREFIX opsional kini divalidasi filename-safe dan menjaga report/screenshot task lama tidak ditimpa; default task6/task7 tetap untuk command historis. Jangan memasukkan credential runner ke VITE_*. Semua Git/GitHub tetap manual pengguna.
+
+### Bukti perilaku
+
+- Supervisor normalize trim/uppercase SKU dan trim120 astral Unicode name; name-only/own SKU/no-op diterima. Anonymous dengan CSRF valid401, operator403, missing/invalidCSRF403. Invalid UUID/body kosong/null/extra field/unit/id/stock/name/sku invalid400, UUID tidak ada404 PRODUCT_NOT_FOUND.
+- Duplicate SKU dengan name berbeda409 SKU_ALREADY_EXISTS tanpa perubahan row sebagian. Dua update produk berbeda ke satu SKU menghasilkan200/409, unique database tetap arbiternya. PATCH saat PostgreSQL unavailable503 melalui mapper existing.
+- Produk yang sudah received penuh dapat diperbaiki pada ID/createdAt/unit sama. Snapshot DB header/items/receipt/ledger/balance sebelum-sesudah identik. Receipt lama replay200 dengan ID/body asli dan header replay; balance/counter/FK tetap, reconciliation seluruh dataset lulus.
+- Inventory/history/detail mengembalikan label baru. Form supervisor prefill, Batal, validation, pending disabled, double-submit guard, API409 tampil dan nilai dipertahankan. Component membuktikan invalidate products/inventory/receivings/transactions termasuk inactive detail; browser mengunjungi kembali related pages dengan label baru/stok10 dan replay tanpa menggandakanstok.
+- Operator tidak ditawari Edit pada component; backend tetap enforcement403. Existing browser tests partial40/full60, commit response hilang/retry, refetch failure sesudah commit dan isolasi cache/user semuanya tetap lulus.
+
+### Percobaan awal (dipertahankan, bukan disembunyikan)
+
+- Integration awal61/63 PASS,2 FAIL pada test baru: fixture `EDIT-`/`RACE-` +UUID36 menghasilkan41 karakter, ditolak400 sesuai max40 existing. Diperbaiki panjang suffix fixture, tidak melonggarkan requirement. Bukti product-edit-integration-initial.json.
+- Run kedua62/63 PASS: API race sudah200/409, assertion count mencari SKU lowercase sebelum normalisasi sehingga0. Lookup tes diperbaiki ke uppercase; bukti product-edit-integration-second.json. Run final63/63 PASS.
+- Browser awal10/12 PASS: dua test baru mencari exact text nama pada cell yang menampilkan `SKU ? nama`. Selector disesuaikan ke accessible cell/regex tanpa mengubah UI agar tes lulus. Bukti product-edit-browser-initial.json; run final12/12 PASS.
+- Warning pg query-in-flight internal adapter, Vite Zod PURE annotation/chunk sekitar652kB, serta NO_COLOR/FORCE_COLOR browser tetap muncul; tidak diklaim selesai.
+
+### Cleanup, sinkronisasi dan batas
+
+Vite verifikasi PID23632 dihentikan setelah suite, fixture API3310 sudah berhenti, tidak ada listener3310/5176 tersisa. Dua dependency container project tes hanya stopped, volume/database/credential tetap dipertahankan. Tidak menghentikan aplikasi/project lain atau memakai prune/reset/Git.
+
+Audit awal menemukan OpenAPI frontend tertinggal dari authority backend (metadata Task5 dan aturan beberapa endpoint); pasangan API Markdown/OpenAPI dan contract-version.json kini disalin identik dari backend setelah21 operasi divalidasi. Checker statis diperbarui dari20 menjadi21 operasi; bukti Task2?7 tetap mempunyai konteks20 operasi pada tanggal asal dan tidak ditimpa. File evidence B/E integration asal backend, component/browser asal frontend; salinan identik di repo pasangan untuk review bukan run baru.
+
+Production Docker image build/deployment ulang untuk penyempurnaan ini, HTTPS/TLS publik, Firefox/WebKit/Safari, device fisik, load/stress/fuzz/accessibility audit menyeluruh: **NOT_RUN**. Tidak ada perubahan PROJECT_SPEC.md, .gitignore, applied migrations, model schema atau dependency/lockfile yang diperlukan oleh edit ini.
+
+Validasi akhir checker kedua repo exit0 PASS87 ID/21 operasi/hash kontrak. Satu pemanggilan ulang schema validator sempat memakai path backend/.cache dari cwd backend (path ganda), sehingga tool tidak ditemukan; ini kesalahan path tool, bukan kegagalan schema. Command diperbaiki menjadi .cache/doc-tools dari cwd backend; validator kedua kontrak kembali exit0 OK. Docker ps memastikan hanya project tes baru stopped; listener3310/5176 tidak tersisa.
+
+
+## Riwayat Edit Produk ? lanjutan setelah Task7 (2026-10-30)
+
+Scope tambahan pengguna melanjutkan edit SKU/name existing: log permanen dan halaman khusus supervisor, bukan mengganti riwayat penerimaan/ledger. Keputusan PRD/technical-spec ditulis sebelum implementasi. Tidak menambah dependency/role, delete/archive produk, mutation log atau backfill edit masa lalu.
+
+### Migration dan isolasi data
+
+Memakai kembali project tes **wrs-product-edit-5fe0384e** (saat audit awal stopped), database **wrs_edit_5fe0384e_test**, host PostgreSQL127.0.0.1:55470 dan Redis127.0.0.1:56420. File env/.env.product-edit existing dipertahankan beserta credential. Tidak memakai/mengubah target development/deployment. Namespace dasar wrs:test:productedit:5fe0384e; browser fixture tetap membuat namespace unik per kasus untuk limiter tanpa melonggarkan produksi.
+
+Migrasi forward baru **202610300002_product_edit_history**; model multi-file baru beserta relasi Product/User, indeks dan CHECK/FK. Fingerprint tujuh tabel existing (users/products/receivings/receiving_items/receipts/inventory_transactions/inventory_balances) sebelum-sesudah upgrade sama. Tabel log baru kosong setelah upgrade: tidak merekayasa edit terdahulu. Repeated deploy mempertahankan migration history. DB kosong baru **wrs_history_empty_720d76e6_test** dibuat dalam PostgreSQL tes yang sama untuk memverifikasi kedua migration dari nol dan deploy ulang. Database/volume tidak dihapus, initial migration dan PROJECT_SPEC.md hash tetap.
+
+### Command dan hasil aktual
+
+Semua tanggal hasil2026-10-30; command backend dari root backend, frontend dari root frontend.
+
+| Pemeriksaan | Exit | Hasil |
+| --- | --- | --- |
+| docker compose --env-file env/.env.product-edit up -d --wait postgres redis | 0 | Dependency tes existing healthy; hanya project tes ini dijalankan. |
+| node .cache/verify-history-migration.mjs | 0 | PASS6 checks: upgrade preserves all seven tables, no fake past logs, upgrade repeat, fresh empty schema, both migrations, fresh repeat. Script lokal ignored untuk audit eksekusi ini; bukan prasyarat checkout orang lain. |
+| npm run prisma:validate; npm run prisma:generate (backend) | 0 | PASS Prisma7.10.1 multi-file schema dan generated client. |
+| npm run lint; npm run typecheck; npm run build (backend) | 0 | PASS pada versi akhir termasuk readiness tabel log. |
+| npm run lint; npm run typecheck; npm run build (frontend) | 0 | PASS pada versi akhir tombol/halaman history. |
+| npm run test:unit -- --reporter=default --reporter=json --outputFile=docs/evidence/product-history-unit.json | 0 | **19/19 PASS**,0 skip/fail. |
+| npm run test:integration -- --reporter=default --reporter=json --outputFile=docs/evidence/product-history-integration.json | 0 | **67/67 PASS**,0 skip/fail: auth19, receiving/products28, users13, foundation7. |
+| npm run test:component -- --reporter=default --reporter=json --outputFile=docs/evidence/product-history-components.json | 0 | **20/20 PASS**,0 skip/fail;3 halaman history baru,4 form edit dan regresi security/cache. |
+| npm run dev -- --mode test --port 5176, API_PROXY_TARGET=http://127.0.0.1:3310 (frontend) | RUNNING saat suite | Vite fixture terpisah; bukan development5175. |
+| npm run test:browser dengan E2E vars di bawah | 0 | **14/14 PASS**,0 skipped/flaky/retry,46.9s, Chrome desktop/mobile. |
+| python -m openapi_spec_validator terhadap kedua OpenAPI (isolated Python cache0.7.2) | 0 | Schema valid; kontrak/manifest byte-equal,22 API operations. |
+| python docs/validation/check-docs.py kedua repo, frontend --contract-source backend docs eksplisit | 0 | PASS87ID existing/22ops, local links, archive/source/contract hashes. |
+
+Integration process environment BACKEND_ENV_FILE=absolute env/.env.product-edit, RUN_FOUNDATION_INTEGRATION=true. Browser env: E2E_BACKEND_ENTRY=absolute built dist/server.js, E2E_BACKEND_ENV_FILE=absolute file tes, E2E_BACKEND_PORT=3310, E2E_BASE_URL=http://localhost:5176, E2E_EVIDENCE_PREFIX=product-history, E2E_SEED_EMAIL/PASSWORD dibaca privat ke process env dari credential disposable. E2E_RUNTIME unset (external), workers1/retries0. Persiapan/generate/build/integration selesai sebelum browser menggunakan DB yang sama; tidak ada test suite bertumpuk. Bukti product-history-* tidak menimpa product-edit-* atau Task2?7.
+
+### Pembuktian aturan bisnis
+
+- Authenticated supervisor PATCH memakai actorID req.user, actorName dari database server dan PostgreSQL clock_timestamp() saat INSERT. Client actorId/changedAt ditolak400. Satu event berisi kedua label before/after dan changedFields efektif saja. GET supervisor200, anonymous401/operator403, UUID/query invalid400/missing404, produk belum diedit200 empty page.
+- No-op sesudah trim/uppercase tidak menulis product/log. Duplicate SKU409 dan invalid edit tidak log keberhasilan. Dua edit bersamaan pada produk sama terserialisasi oleh FOR UPDATE: before event kedua tepat after event pertama. Pagination1 item mengembalikan urutan waktuDESC/idDESC dan count konsisten.
+- Atomic proof sengaja menyebabkan CHECK violation PostgreSQL SESUDAH UPDATE produk dan INSERT log; tes terlebih dahulu mengamati kedua write di transaction client. Rollback mengembalikan produk/log/balance/receiving/receipt/ledger seperti semula. Snapshot actorName tidak berubah setelah actor di-rename dan soft-delete; FK tetap, log terbaca.
+- CHECK effective-change/SKU/name dan FK Product/User RESTRICT update/delete diverifikasi melalui catalog PostgreSQL. Readiness LIMIT0 turut membaca metadata tabel log; schema belum dimigrasi tidak dianggap ready.
+- Component membuktikan loading/empty/error/retry, actor/before/after, event pagination, kembali ke produk, invalidasi cache productHistory terpisah dan operator tidak ditawari tombol. Halaman berada dalam Protected supervisor; backend tetap menegakkan role.
+- Browser desktop/mobile membuka tombol Riwayat Edit ke /products/:id/history, identity/current label, empty state, melakukan edit melalui UI, menampilkan event yang benar, menambah total21 event dan pindah halaman2. Screenshot halaman mobile/desktop ditinjau; horizontal table scroll tetap di dalam panel tanpa overflow halaman. Operator direct route forbidden dan API403.
+- History inventory tetap satu transaksi+10 untuk receipt test, tidak berisi21 edit. Receipt replay lama200 dengan DTO/id asli dan balance tetap10. Semua regresi product edit, partial40/full60, lost response/replay, refetch failure dan cache isolation tetap PASS.
+
+### Riwayat percobaan dan keterbatasan
+
+- Satu command prisma:validate awal dipanggil dari folder parent yang tidak mempunyai script tersebut: npm Missing script, pemeriksaan Prisma belum dieksekusi; command dari backend kemudian PASS. Tidak mengubah konfigurasi parent untuk menutupi kesalahan cwd.
+- Typecheck awal menemukan mock atomic-failure mengembalikan Promise biasa sementara repository addHistory terinfer sebagai Prisma relation client. Repository dibuat async dengan return Promise row yang tepat; tidak memakai any/type suppression. Typecheck/build akhir PASS, integration final diulang PASS67.
+- Tidak ada kegagalan assertion fitur pada integration/component/browser riwayat. Warning pg query-in-flight adapter existing, Vite Zod PURE/chunk sekitar654kB dan NO_COLOR/FORCE_COLOR tetap tercatat, bukan dianggap selesai.
+- Production Docker image rebuild/deployment untuk tambahan ini, HTTPS publik, Firefox/WebKit/Safari, device mobile fisik, load/fuzz/accessibility menyeluruh dan automated Mermaid render **NOT_RUN**. ERD/data-flow direview statis terhadap model/transaction; tidak mengklaim render otomatis.
+- Edit sebelum migrasi tidak dapat dibackfill tanpa mengarang nilai lama; UI empty wajar sampai perubahan efektif baru terjadi. Tidak ada update/delete log pada API; DBA tetap bertanggung jawab atas backup/operasi database di luar aplikasi.
+
+### Cleanup/provenance
+
+Fixture API3310 sudah berhenti; Vite tugas PID7780 dihentikan setelah suite. Project tes PostgreSQL/Redis dikembalikan ke stopped seperti awal, volume/database baru dan existing dipertahankan; tidak ada listener3310/5176 tersisa. Tidak menghentikan portfolio, development atau deployment lain, menjalankan Git, reset atau prune. Salinan evidence backend (unit/integration/migrations) dan frontend (component/browser/screenshots) di repo pasangan identik untuk review; salinan bukan run baru. Laporan product-edit awal tetap mempunyai scope tanpa model/migrasi saat itu; laporan lanjutan ini mencatat penambahan model/migrasi sekarang.
+
+
+## Pilihan produk receiving tanpa pencarian ? 2026-10-30
+
+Scope frontend CreateReceiving saja: input/label Cari produk untuk pilihan dan state/handler pencariannya dihapus. Query selector page/limit100, pagination dan known choices existing tetap. Field reference/quantity dan validator bisnis tidak berubah. ProductsWorkspace masih mempunyai pencarian dan API q tidak diubah. Backend source/config/schema/migration/dependency/credential tidak diubah.
+
+### Hasil aktual
+
+| Command dari root frontend | Exit | Hasil |
+| --- | --- | --- |
+| npm run lint | 0 | PASS final. |
+| npm run typecheck | 0 | PASS final. |
+| npm run build | 0 | PASS; existing Zod PURE/chunk sekitar654kB warning tetap muncul. |
+| npm run test:component -- --reporter=default --reporter=json --outputFile=docs/evidence/receiving-choice-components.json | 0 | **23/23 PASS**,0 skipped/fail;3 test form baru. |
+| npm run test:browser dengan E2E_EVIDENCE_PREFIX=receiving-choice | 0 | **16/16 PASS**,0 skipped/flaky/retry,59.84s, Chrome desktop/mobile;2 kasus baru +14 regression existing. |
+
+Browser memakai built backend existing, PostgreSQL/Redis nyata project **wrs-product-edit-5fe0384e**, database **wrs_edit_5fe0384e_test**, host PostgreSQL55470/Redis56420, file private env/.env.product-edit yang sudah tersedia (tidak ditampilkan/diubah). Ini DB tes terpisah dari development/deployment. Namespace limiter unik tiap kasus dari fixture existing, limiter produksi tidak dilonggarkan. Vite fixture API_PROXY_TARGET=http://127.0.0.1:3310 dan `npm run dev -- --mode test --port 5176`; runner E2E_BACKEND_ENTRY/ENV_FILE path absolut built server.js/file tes, E2E_BACKEND_PORT3310, E2E_BASE_URL=http://localhost:5176, E2E_SEED_EMAIL/PASSWORD privat di process env, E2E_RUNTIME unset. Tidak memerlukan rebuild/migrasi backend pada pekerjaan frontend ini.
+
+### Pembuktian
+
+- Component memastikan label/input tidak ada, productsApi.list menerima page1/2+limit100 tanpa q, dan pilihan dari halaman awal bertahan ketika memilih produk dari halaman kedua (fixture total101).
+- Component memverifikasi payload dua productId berbeda, quantity2 dan3 serta reference asli. Duplicate selection ditolak sebelum mutation; quantity0,-1,1.5,1000001 juga tidak mengirim request.
+- Browser nyata memastikan katalog melampaui100 produk, memilih produk awal dan produk pada halaman berikutnya melalui dropdown/pagination, dan produk pertama tetap dipilih. Seluruh request selector tanpa q.
+- Browser mencoba duplicate product dan quantity0: tidak ada POST receiving. Setelah koreksi, tepat1 POST membuat dokumen OPEN dengan2 item, expected2/3, received0, reference tetap dan kedua balance0. Tidak melakukan receipt atau mengubah stok untuk test ini.
+- Seluruh regresi sebelumnya (edit/history produk, receiving partial/full, idempotent lost-response replay, post-commit refetch failure dan user/cache isolation) tetap lulus di desktop/mobile. Pencarian pada halaman produk lain dan q API tetap dipakai oleh regresi tersebut.
+
+### Percobaan awal dan perbaikannya
+
+- Lint awal menemukan helper pagination di-import tetapi pemanggilan lama belum diganti; pemanggilan tes diperbaiki. Typecheck awal menemukan opsi exact Playwright dipakai pada Testing Library findByRole; opsi tes diperbaiki sesuai API library, tanpa type suppression.
+- Component pertama21/23 PASS,2 FAIL saat membuka Select karena jsdom tidak menyediakan CSS.escape. Ditambahkan shim CSS.escape khusus tests/setup.ts (hex-escaped DOM identifiers); actual HeroUI Select tetap diuji. Laporan awal receiving-choice-components-initial.json dipertahankan. Final23/23 PASS.
+- Browser pertama14/16 PASS,2 FAIL pada selector label yang turut menemukan dialog/listbox yang sedang exiting. Helper dibatasi ke tombol Select dan menunggu listbox ditutup, tidak mengubah UI atau validation untuk meluluskan tes. Bukti receiving-choice-browser-initial.json disimpan. Final16/16 PASS.
+- Suite lama history mempunyai path screenshot tetap. Screenshot rerun dipisahkan ke receiving-choice-page-*, dan screenshot historis frontend dipulihkan byte-identik dari salinan backend sebelumnya; screenshot helper kini menghormati optional E2E_EVIDENCE_PREFIX agar run mendatang tidak menimpa bukti lama. JSON Task2?7/product-edit/product-history tidak ditimpa.
+
+### Cleanup dan NOT_RUN
+
+Vite verifikasi PID29208 dihentikan; API3310 milik fixture sudah berhenti, tidak ada listener3310/5176 tersisa. PostgreSQL/Redis project tes dikembalikan ke stopped sesuai keadaan awal; data dan volume dipertahankan. **wrs-development-laptop-postgres-1 dan wrs-development-laptop-redis-1 tetap running healthy**, tidak disentuh. Tidak menghentikan runtime pengguna atau menjalankan Git/prune/reset.
+
+Backend full integration ulang, OpenAPI schema validator ulang (kontrak tidak berubah; byte/hash equality diperiksa), Docker image/deployment ulang, browser selainChrome, perangkat fisik dan load/accessibility menyeluruh: **NOT_RUN** pada perubahan kecil ini. Bukti backend dan kontrak terdahulu tetap sesuai konteks asal, bukan dianggap run baru.
+
+
+## Pagination katalog receiving5 data ? 2026-10-30
+
+### Reproduksi dan akar masalah
+
+Audit read-only PostgreSQL development warehouse_development: **products1, receivingDocuments3, receivingItems3**. Hitungan sama setelah selesai. Tidak ada listener API/frontend development pada snapshot audit; tidak mengklaim menangkap response browser development yang sedang aktif. Existing source query memanggil productsApi.list({page,limit:100}), total dari response.pagination.total (SQLCOUNT products), dengan TanStack key actor/epoch/products/list/filters. Jumlah rows form tidak masuk query maupun total.
+
+Focused component reproduction pada source lama membuat11 item receiving dengan satu produk katalog: UI tetap Halaman1/1data dan Next disabled, request page1limit100. **1PASS/3skipped** karena -t memilih hanya reproduksi, bukan klaim suite penuh; report receiving-pagination-reproduction.json. Limit100 berarti halaman2 baru pada produk101, sehingga5/6/11 sebelumnya tetap satu halaman. Penambahan item/dokumen receiving tidak menambah product master.
+
+Selain label ambigu, map known lama menggabungkan seluruh opsi halaman yang pernah dipilih. Perbaikan scoped: local limit5/ceil(total/5), label katalog terpisah dari jumlah receiving rows, pilihan tersimpan hanya dipin pada barisnya, opsi row lain tidak menawarkan produk yang sudah dipilih. Schema bisnis original tetap. Shared Pagination/API/default halaman lain tidak diubah.
+
+### Command dan hasil aktual
+
+| Command / pemeriksaan | Exit | Aktual |
+| --- | --- | --- |
+| npm run lint (frontend) | 0 | PASS final, termasuk browser tests yang diperbarui. |
+| npm run typecheck (frontend) | 0 | PASS. |
+| npm run build (frontend) | 0 | PASS; existing Zod PURE/chunk sekitar655kB warning tetap terlihat. |
+| npm run test:component -- --reporter=default --reporter=json --outputFile=docs/evidence/receiving-pagination-components.json | 0 | **27/27 PASS**,0 skip/fail; batas5/6/11, navigation, form-state preservation dan duplicate/quantity guards. |
+| npm run test:browser -- tests/browser/receiving-pagination.spec.ts --project=chrome-desktop | 0 | **1PASS**,0skipped/retry,7.2s; real API/PG dengan catalogue0 awal ->5 ->6 ->11. |
+| Command boundary sama --project=chrome-mobile | 0 | **1PASS**,0skipped/retry,5.5s, database kosong terpisah. |
+| npm run test:browser -- tests/browser/receiving-product-choice.spec.ts tests/browser/warehouse.spec.ts --grep 'creates a multi-product\|creates receiving through UI' | 0 | **4/4 PASS**,0skip/retry,15.2s: multi-item creation dan partial40/full60, desktop/mobile. Tanda pipe dalam arg grep adalah regex alternation; jangan menambahkan backslash saat menjalankan string PowerShell. |
+| Audit hash216 file backend sebelum/sesudah (exclude generated/cache/build/dependencies) | 0 | Semua unchanged. Backend source/config/credential/contract/migrations tidak diubah. |
+| Checker dokumentasi frontend terhadap artifact backend eksplisit | 0 | PASS87ID/22operasi/manifest dan byte equality; command dicatat terpisah dari tes runtime. |
+
+### Sumber data API dan pembuktian batas
+
+Component dataset5/6/11 memakai array nyata di fixture, dislice menurut filters.page/limit; menguji jumlah opsi pada tiap halaman, Next/Previous disabled, requestlimit5 serta halaman sebelumnya kembali. Total tidak diganti panjang current page atau banyak rows. Reproduksi versi baru dengan11rows dan1catalogueproduct menampilkan kedua hitungan secara terpisah.
+
+Browser memakai database baru pada PostgreSQL project TES existing wrs-product-edit-5fe0384e: **wrs_pagination_desktop_fb9cb963_test** dan **wrs_pagination_mobile_22fa78a6_test**. Keduanya dimigrasi/seed secara terisolasi, tanpa reset atau menghapus data database lain. Credential berasal environment tes existing, tidak ditampilkan dan tidak mengganti file backend. Clone env tersimpan privat di frontend .cache/.env.pagination-desktop atau -mobile. Metadata preparation pada receiving-pagination-databases.json. Helper seed sempat gagal persiapan awal, PATH local node_modules/.bin diperbaiki lalu migrate/seed berhasil; bukan kegagalan business test. Database desktop yang telah dibuat dipakai ulang, tidak dihapus untuk menutupi masalah.
+
+Runner menggunakan E2E_BACKEND_ENTRY absolute built backend/dist/server.js, E2E_BACKEND_ENV_FILE absolute clone env per-project, E2E_BACKEND_PORT3310, E2E_BASE_URL=http://localhost:5176, E2E_SEED_EMAIL/PASSWORD privat, E2E_RUNTIME unset. Vite test API_PROXY_TARGET=http://127.0.0.1:3310 dan npm run dev -- --mode test --port5176. E2E_EVIDENCE_PREFIX per-run receiving-pagination-desktop/mobile/regression menjaga bukti lama. Persiapan menggunakan source/backend build existing, bukan mengubah source dependency frontend.
+
+Network browser membuktikan: total5/page1rows5/limit5 -> Nextdisabled; total6/page1rows5 danpage2rows1 ->dua halaman; total11/page2rows5 danpage3rows1 ->tiga halaman. UI endpoint tetap GET /api/v1/products?page=N&limit=5. Dropdown halaman baru tidak menyimpan opsi tak terpilih dari halaman sebelumnya. Pilihan PAGER01/PAGER06 tetap tampil pada row sendiri saatpage3, quantity2/3 tetap; produk yang sudah dipilih tidak ada pada dropdown row3. Pilih PAGER11 quantity4 lalu dokumen dibuat dengan3 productId berbeda dan reference sama. Screenshot desktop/mobile halaman3 sudah ditinjau.
+
+Boundary spec membutuhkan catalogue kosong sendiri dan dijalankan terpisah per-project; guard akan SKIP/NOT_RUN pada database katalog nonempty, bukan menghapus data shared atau menyatakan PASS. Untuk rerun sediakan database tes BARU per-project dari template/isolated setup, jangan reset database bekas. Laporan di atas benar-benar berjalan pada kedua target kosong (guard tidak skip). Empat regresi dijalankan setelah boundary selesai dengan database desktop yang sudah terisi; fixture sendiri mengisolasi namespace limiter per kasus, tanpa melonggarkan limiter produksi.
+
+Tes multi-item existing disesuaikan untuk mengambil produk pertama/keenam dan membandingkan stock sebelum/sesudah, agar tidak harus menyusuri ratusan halaman katalog fixture lama. Duplicate selection kini diuji tidak tersedia, bukan mencoba memilih opsi yang memang telah diblokir. Stock/receipt 40+60 tetap terverifikasi pada regresi terpisah.
+
+### Percobaan awal dan batas
+
+Component pertama25/27 PASS,2FAIL karena fixture label lama membawa separator encoding yang tidak cocok setelah refactor. Label SKU/name menggunakan Unicode escape eksplisit, fixture dinormalisasi; receiving-pagination-components-initial.json dipertahankan. Final27/27 PASS. Tidak melonggarkan validation atau memakai type suppression. Suite browser seluruh fitur dan backend full integration ulang **NOT_RUN** pada pekerjaan form ini; enam browser terpilih di atas PASS, jangan menyebut seluruh suite dijalankan. OpenAPI validator baru, Docker rebuild/deployment, browser selainChrome/device fisik/load/accessibility menyeluruh juga NOT_RUN.
+
+Cleanup: API3310 fixture sudah berhenti; Vite verifikasi PID25068 dihentikan; dependency project TES dikembalikan stopped. Dua database baru dan semua volume/data dipertahankan. **wrs-development-laptop PostgreSQL/Redis tetap running healthy**. Count development terakhir sama1produk/3dokumen/3items. Tidak menjalankan Git/prune/reset. Seluruh proof Task2?7/product-edit/product-history/receiving-choice tetap disimpan.
+
+## Pagination baris item receiving — 2026-10-30
+
+Penyempurnaan frontend setelah Task7, terpisah dari pagination KATALOG pada bukti sebelumnya. Hanya CreateReceiving dan tes/dokumentasi terkait berubah. Pernyataan lama bahwa seluruh baris selalu ditampilkan adalah konteks versi sebelumnya; versi ini menampilkan5 baris per halaman. Kontrak/PRD bisnis, source backend, migrasi, dependency/lockfile dan PROJECT_SPEC.md tidak diubah.
+
+### Perintah dan hasil aktual
+
+Seluruh command aplikasi dijalankan dari root repository frontend, Node/npm dan dependency existing. Hasil final berlaku untuk kode terakhir setelah perbaikan mobile/error di bawah.
+
+| Perintah | Exit | Hasil aktual |
+| --- | --- | --- |
+| `npm run lint` | 0 | PASS. |
+| `npm run typecheck` | 0 | PASS, strict tetap. |
+| `npm run build` | 0 | PASS,1952 modules; warning existing Zod PURE annotation dan chunk JS658.17kB (>500kB) tetap ada. |
+| `npm run test:component -- --reporter=default --reporter=json --outputFile=docs/evidence/receiving-item-pages-components.json` | 0 | **34/34 PASS**,8 files,0skip/fail;7 kasus baru (termasuk empat boundary parameter). |
+| `npm run test:browser -- tests/browser/receiving-item-pages.spec.ts tests/browser/receiving-product-choice.spec.ts tests/browser/warehouse.spec.ts --grep 'paginates receiving items separately\|creates a multi-product\|creates receiving through UI'` | 0 | **6/6 PASS**,46.7s,0skip/flaky/retry;3 kasus pada Chrome desktop1440x1000 dan mobile390x844. Pipe pada argumen grep adalah regex alternation; gunakan tanpa backslash ketika menjalankan PowerShell. |
+| `npx --yes --package=prettier@3.6.2 prettier --write <lima file TS/TSX yang berubah>` lalu `--check` pada file yang sama | 0 | PASS semua file. Tidak ditemukan konfigurasi Prettier lokal; memakai default versi3.6.2, tool sementara tanpa mengubah dependency/lockfile. |
+| `python docs/validation/check-docs.py --contract-source ../backend/docs` | 0 | PASS87 requirement,22 operasi, manifest/archive/source hashes dan byte equality kontrak terhadap authority backend. Pemeriksaan statis, bukan schema-validator/runtime API baru. |
+| `Get-FileHash -Algorithm SHA256 ../PROJECT_SPEC.md` | 0 | Tetap901d39dc9ed68be7aa86fbcecf177c16fd57d0e767ace0360f2c74f825cfef8b. |
+
+Lima target Prettier: `src/features/receivings/components/CreateReceiving.tsx`, `tests/component/receiving-item-pages.test.tsx`, `tests/component/receiving-product-choice.test.tsx`, `tests/browser/receiving-item-pages.spec.ts`, `tests/browser/receiving-pagination.spec.ts`. Jalankan dengan path eksplisit dipisahkan spasi, bukan literal placeholder di tabel. Dua tes katalog lama hanya disesuaikan terhadap label/count item baru; batas dan behavior katalog tetap diuji component serta browser multi-produk.
+
+### Pembuktian perilaku
+
+- Batas5/6/10/11 item menghasilkan1/2/2/3 halaman; render maksimal5 field quantity dengan nomor global. Pager item memakai seluruh rows.length; total katalog tetap dari API. Menambah row tidak mengubah jumlah produk katalog.
+- Tambah membuka halaman row baru dan memfokuskan trigger produk. Maksimal50 serta minimal1 dipertahankan. Hapus row11 dari halaman3 membuka halaman2; component juga menghapus row2 dari enam row terisi dan memastikan produk/quantity3 bergeser utuh ke posisi2, dan produk/quantity6 ke posisi5.
+- Component menyimpan enam item, browser sebelas. Pilihan dan quantity tetap setelah navigasi item/katalog; label selected product yang tidak berada pada halaman katalog saat ini tetap benar. Fixture component catalogue dislice sesuai page/limit5.
+- Browser menampilkan row6 sambil katalog pada halaman1, lalu membuktikan produk row1 yang tersembunyi tidak tersedia untuk dipilih dua kali; own product6 tetap tersedia. Guard duplikat seluruh array tetap ada sebelum mutation.
+- Quantity0 pada row2 disimpan lalu disembunyikan; submit dari halaman3 tidak mengirim POST, membuka halaman1, menampilkan pesan Item2 dan fokus quantity2. Blank product pada halaman tersembunyi juga terdeteksi component. Setelah koreksi error lama hilang, seluruh data divalidasi ulang.
+- Component submit dari halaman1 mengirim seluruh6 item. Browser submit dari halaman2 mengirim seluruh11 productId/expectedQuantity1..11, termasuk halaman1 dan3 yang tersembunyi; server201, OPEN, receivedQuantity0 dan reference tetap. Tepat1 POST, tidak ada POST pada submit invalid. Balance seluruh11 produk dibandingkan sebelum/sesudah dan tetap sama.
+- Regresi browser multi-produk/catalogue dan receiving partial40/full60, inventory/history serta duplicate-submit tetap PASS desktop/mobile. Stock hanya berubah pada kasus receipt regresi yang memang menggunakan database tes.
+- Screenshot final `receiving-item-pages-chrome-desktop.png` dan `receiving-item-pages-chrome-mobile.png` telah ditinjau. Assertion tidak ada horizontal overflow dijalankan pada batas5/6/10/11 dan halaman submit; label SKU/nama panjang tetap dibungkus dalam form.
+
+### Runtime terisolasi dan urutan verifikasi
+
+Docker Engine29.8.0 tersedia. Hanya project TES existing **wrs-product-edit-5fe0384e** dihidupkan memakai Compose backend dan private env/.env.product-edit: PostgreSQL127.0.0.1:55470, database **wrs_edit_5fe0384e_test**; Redis127.0.0.1:56420. Tidak memakai database development atau deployment, tidak reset/migrate ulang/menghapus data. Database tes terisi dipakai kembali; fixture hanya menambah data tes bila perlu.
+
+Urutan: `docker compose --env-file env/.env.product-edit up -d --wait postgres redis` (dari repository backend) -> healthy -> Vite test `API_PROXY_TARGET=http://127.0.0.1:3310`, `npm run dev -- --mode test --port 5176` -> pemeriksaan frontend lint/typecheck/build/component -> browser. Readiness backend ditunggu fixture sebelum tiap kasus; satu worker, tidak ada suite browser bertumpuk.
+
+Runner menggunakan E2E_BACKEND_ENTRY path absolut backend built server.js existing; E2E_BACKEND_ENV_FILE path absolut file tes yang sama; E2E_BACKEND_PORT3310, E2E_BASE_URL=http://localhost:5176, E2E_EVIDENCE_PREFIX=receiving-item-pages dan E2E_RUNTIME unset. Credential seed dibaca privat ke environment process, tidak dicatat pada laporan. Fixture memberi namespace Redis `wrs:test:task6:<UUID>` baru per kasus, tanpa melonggarkan rate limit produksi; backend process milik fixture dihentikan setelah kasus. Repository frontend tetap tidak mengimpor model/source backend.
+
+Log Vite mencatat ECONNREFUSED sementara pada `/health/ready` selama process backend per-kasus sedang startup/restart. Probe readiness mengulang sampai200 sebelum alur browser berjalan; final seluruh kasus PASS. Exit1 Vite setelah cleanup berasal dari penghentian process verifikasi yang disengaja, bukan hasil tes/build.
+
+### Percobaan awal dan perbaikan
+
+- Component awal34/34 PASS, tetapi typecheck awal exit2 karena opsi `exact` Playwright ikut dipakai pada Testing Library getByRole di dua lokasi tes baru. Dihapus sesuai API Testing Library; tidak menggunakan type suppression. Lint awal PASS, build pada percobaan itu belum dijalankan karena guard typecheck. Ringkasan `receiving-item-pages-checks-initial.json` dipertahankan, hasil final terpisah.
+- Browser awal **1PASS desktop/1FAIL mobile timeout60s**; bukan timeout izin. Snapshot/screenshot menunjukkan label produk panjang meluber pada grid mobile. Screenshot desktop juga memperlihatkan pesan invalid lama setelah input diperbaiki. Track grid diubah lokal menjadi minmax(0,1fr), child min-width0 dan selected label wrap-anywhere; edit field membersihkan error/pesan lama. Tes ditambah assertion overflow per-boundary, error clearance dan step item untuk diagnostik, tanpa menaikkan timeout/retry atau mengubah backend. Final6/6 PASS setelah lint/typecheck/build/component diulang pada kode terbaru.
+- Bukti awal `receiving-item-pages-browser-initial.json`, `receiving-item-pages-chrome-desktop-initial.png`, `receiving-item-pages-chrome-mobile-initial.png` dipertahankan. Bukti final menggunakan prefix receiving-item-pages, tidak menimpa laporan task/penyempurnaan terdahulu.
+- Prettier pertama terhalang sandbox cache-only (ENOTCACHED). Command tool sementara dijalankan kembali dengan akses yang diperlukan dan berhasil; ini bukan kegagalan tes aplikasi. Tidak menginstal dependency aplikasi atau mengubah konfigurasi npm.
+
+### Cleanup dan batas
+
+Vite verifikasi PID14500 dihentikan setelah path/argumen dicocokkan; tidak ada listener3310/5176 tersisa. Dua container project tes dikembalikan stopped sesuai keadaan awal; data/database/volume tetap ada. **wrs-development-laptop-postgres-1** dan **wrs-development-laptop-redis-1** tetap running healthy. Tidak menghentikan runtime lain, menjalankan Git/prune/reset, atau mengubah file backend.
+
+Full browser suite seluruh fitur (termasuk browser boundary katalog yang membutuhkan database kosong baru), backend full integration ulang, OpenAPI schema validator baru, Docker production rebuild/deployment, browser selainChrome, perangkat fisik, load/accessibility menyeluruh: **NOT_RUN** pada perubahan form ini. Bukti historis tetap berlaku hanya untuk konteks asalnya. Tidak ada blocker untuk penggunaan form yang telah diverifikasi.
