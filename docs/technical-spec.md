@@ -164,3 +164,13 @@ HeroUI v3 TextField/Select/ListBox/Card/Button dan Tailwind layout dipertahankan
 Acuan resmi versi terpasang: [HeroUI TextField v3](https://heroui.com/en/docs/react/components/text-field), [Select v3](https://heroui.com/en/docs/react/components/select), [TanStack Query v5 cancellation](https://tanstack.com/query/v5/docs/framework/react/guides/query-cancellation), [Playwright configuration](https://playwright.dev/docs/test-configuration). Tanda tangan public types HeroUI 3.2.6 dan Query 5.105.0 diverifikasi melalui strict typecheck aktual.
 
 Tidak ada perubahan backend/config parent, kontrak replika atau stack runtime. Test tooling ditambahkan exact; engine jsdom terbaru tidak kompatibel dengan Node baseline sehingga dipilih versi kompatibel tanpa melonggarkan engine. Build memberi warning Zod PURE annotation dan chunk JS >500 kB; tidak disembunyikan. Code splitting/performance production masih evaluasi Task 7, bukan bukti SLA yang sudah PASS.
+
+
+### Baseline deployment Task 7 terverifikasi
+
+Dockerfiles/lockfile pada masing-masing root repository; Compose backend deploy/compose.yaml menerima context checkout frontend eksplisit. Node 24.12.0/npm 11.6.2, nginx 1.30.6-alpine, PostgreSQL 17.11, Redis 8.2.11 pinned digest. Migration/seed job terpisah sebelum API; gateway HTTP lokal port internal 8080, API tidak dipublish. TRUST_PROXY hanya alamat gateway statis, DNS nginx diperbarui untuk API recreation; tidak ada automatic mutation retry. Runtime non-root/read-only, secret hanya runtime env. Lihat deployment.md dan testing.md untuk detail dan bukti. OpenAPI/Markdown tidak berubah; reconnect Redis memulihkan koneksi otomatis dengan backoff maksimum 2 detik, disableOfflineQueue/fail-closed tetap berlaku. Tidak menambahkan endpoint atau aturan bisnis. HTTPS production tetap NOT_RUN.
+
+
+### Startup development satu command
+
+Lihat development.md: npm run dev backend memvalidasi env/.env/override, memeriksa port3000 dan Docker, Compose project wrs-development-laptop healthy, Prisma generate, query target lalu migrate deploy/seed sekali sebelum watcher. Vite development localhost5175 strictPort, proxy127.0.0.1:3000 mempertahankan Origin. APP_ORIGIN5175/local cookie non-Secure. Mode test eksplisit mempertahankan alternate fixture proxy. Kontrak API/security tidak berubah. Root workspace registration lama dihapus minimal; dependency dan kedua lockfile aplikasi tetap.
