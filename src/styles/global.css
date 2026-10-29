@@ -1,0 +1,10 @@
+@import "tailwindcss";
+@import "@heroui/styles";
+
+@layer base {
+  body {
+    margin: 0;
+    min-width: 320px;
+    font-family: system-ui, sans-serif;
+  }
+}
